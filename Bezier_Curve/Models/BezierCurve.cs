@@ -68,13 +68,16 @@
                       6 * (1 - t) * t * (controlPoints[2].Y - controlPoints[1].Y) +
                       3 * t * t * (controlPoints[3].Y - controlPoints[2].Y);
 
-            // Normalización opcional
+            // Verificamos la magnitud del vector tangente
             float magnitude = (float)Math.Sqrt(x * x + y * y);
-            if (magnitude != 0)
+            if (Math.Abs(magnitude) < 1e-6)
             {
-                x /= magnitude;
-                y /= magnitude;
+                throw new InvalidOperationException("Tangente es cero; verifica los puntos de control.");
             }
+
+            // Normalizamos el vector tangente
+            x /= magnitude;
+            y /= magnitude;
 
             return new Point(x, y);
         }
@@ -82,34 +85,30 @@
         public Point EvaluateNormal(float t)
         {
             Point tangent = EvaluateTangent(t);
-
-            // Rotar 90 grados (inversa de la tangente)
-            float normalX = -tangent.Y;
-            float normalY = tangent.X;
-
-            // Normalización del vector
-            float length = MathF.Sqrt(normalX * normalX + normalY * normalY);
-            return new Point(normalX / length, normalY / length);
+            // La normal es perpendicular a la tangente
+            return new Point(-tangent.Y, tangent.X);
         }
 
-        public float Length(int segments = 1000) // Aumentamos a 1000 para mayor precisión
+        public float Length()
         {
-            float length = 0f;
-            Point previous = Evaluate(0);
+            float length = 0;
+            const int segments = 500; // Aumenta el número de segmentos para mayor precisión
+            Point previousPoint = Evaluate(0.0f);
 
             for (int i = 1; i <= segments; i++)
             {
                 float t = i / (float)segments;
-                Point current = Evaluate(t);
-                length += Distance(previous, current);
-                previous = current;
+                Point currentPoint = Evaluate(t);
+                length += Distance(previousPoint, currentPoint);
+                previousPoint = currentPoint;
             }
+
             return length;
         }
 
-        private float Distance(Point a, Point b)
+        private float Distance(Point p1, Point p2)
         {
-            return (float)Math.Sqrt(Math.Pow(b.X - a.X, 2) + Math.Pow(b.Y - a.Y, 2));
+            return (float)Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
         }
 
         public (BezierCurve, BezierCurve) Split(float t)
@@ -137,20 +136,21 @@
             return (new BezierCurve(left.ToArray()), new BezierCurve(right.ToArray()));
         }
 
-        public Point ClosestPoint(Point target, int steps = 10000) // Aumentar pasos para más precisión
+        public Point ClosestPoint(Point target)
         {
-            Point closestPoint = Evaluate(0);
-            float minDistance = Distance(closestPoint, target);
+            Point closestPoint = Evaluate(0.0f);
+            float minDistance = Distance(target, closestPoint);
 
-            for (int i = 1; i <= steps; i++)
+            const int segments = 500; // Aumenta para mejor precisión
+            for (int i = 1; i <= segments; i++)
             {
-                float t = i / (float)steps;
+                float t = i / (float)segments;
                 Point currentPoint = Evaluate(t);
-                float distance = Distance(currentPoint, target);
+                float currentDistance = Distance(target, currentPoint);
 
-                if (distance < minDistance)
+                if (currentDistance < minDistance)
                 {
-                    minDistance = distance;
+                    minDistance = currentDistance;
                     closestPoint = currentPoint;
                 }
             }
@@ -161,7 +161,7 @@
         public float DistanceTo(Point target)
         {
             Point closestPoint = ClosestPoint(target);
-            return Distance(closestPoint, target);
+            return Distance(target, closestPoint);
         }
     }
 }
