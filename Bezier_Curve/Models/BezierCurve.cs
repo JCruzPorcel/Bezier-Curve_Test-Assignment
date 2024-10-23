@@ -60,101 +60,108 @@
 
         public Point EvaluateTangent(float t)
         {
-            int n = Degree;
-            Point result = new Point(0, 0);
+            float x = 3 * (1 - t) * (1 - t) * (controlPoints[1].X - controlPoints[0].X) +
+                      6 * (1 - t) * t * (controlPoints[2].X - controlPoints[1].X) +
+                      3 * t * t * (controlPoints[3].X - controlPoints[2].X);
 
-            for (int i = 0; i < n; i++)
+            float y = 3 * (1 - t) * (1 - t) * (controlPoints[1].Y - controlPoints[0].Y) +
+                      6 * (1 - t) * t * (controlPoints[2].Y - controlPoints[1].Y) +
+                      3 * t * t * (controlPoints[3].Y - controlPoints[2].Y);
+
+            // Normalización opcional
+            float magnitude = (float)Math.Sqrt(x * x + y * y);
+            if (magnitude != 0)
             {
-                float coeff = n * BinomialCoefficient(n - 1, i) * (float)Math.Pow(t, i) * (float)Math.Pow(1 - t, n - 1 - i);
-                // Calculamos la diferencia entre el siguiente y el actual punto de control
-                Point delta = new Point(controlPoints[i + 1].X - controlPoints[i].X, controlPoints[i + 1].Y - controlPoints[i].Y);
-                result.X += coeff * delta.X;
-                result.Y += coeff * delta.Y;
+                x /= magnitude;
+                y /= magnitude;
             }
 
-            // Normalizamos el vector tangente
-            float length = (float)Math.Sqrt(result.X * result.X + result.Y * result.Y);
-            if (length > 0)
-            {
-                result.X /= length;
-                result.Y /= length;
-            }
-
-            return result;
+            return new Point(x, y);
         }
 
         public Point EvaluateNormal(float t)
         {
             Point tangent = EvaluateTangent(t);
-            float length = (float)Math.Sqrt(tangent.X * tangent.X + tangent.Y * tangent.Y);
 
-            // Normalización del vector tangente
-            if (length == 0) return new Point(0, 0);
+            // Rotar 90 grados (inversa de la tangente)
+            float normalX = -tangent.Y;
+            float normalY = tangent.X;
 
-            return new Point(-tangent.Y / length, tangent.X / length); // Perpendicular
+            // Normalización del vector
+            float length = MathF.Sqrt(normalX * normalX + normalY * normalY);
+            return new Point(normalX / length, normalY / length);
         }
 
-        public float Length(int steps = 100)
+        public float Length(int segments = 1000) // Aumentamos a 1000 para mayor precisión
         {
-            float length = 0;
-            Point previousPoint = Evaluate(0);
+            float length = 0f;
+            Point previous = Evaluate(0);
 
-            for (int i = 1; i <= steps; i++)
+            for (int i = 1; i <= segments; i++)
             {
-                float t = (float)i / steps;
-                Point currentPoint = Evaluate(t);
-                length += Distance(previousPoint, currentPoint);
-                previousPoint = currentPoint;
+                float t = i / (float)segments;
+                Point current = Evaluate(t);
+                length += Distance(previous, current);
+                previous = current;
             }
-
             return length;
         }
 
-        private float Distance(Point p1, Point p2)
+        private float Distance(Point a, Point b)
         {
-            return (float)Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
+            return (float)Math.Sqrt(Math.Pow(b.X - a.X, 2) + Math.Pow(b.Y - a.Y, 2));
         }
 
         public (BezierCurve, BezierCurve) Split(float t)
         {
-            var leftPoints = new Point[controlPoints.Length];
-            var rightPoints = new Point[controlPoints.Length];
+            var left = new List<Point> { controlPoints[0] };
+            var right = new List<Point> { controlPoints[^1] };
 
-            // Calcular los puntos en la nueva curva izquierda y derecha
-            for (int i = 0; i < controlPoints.Length; i++)
+            var temp = controlPoints.ToList();
+
+            while (temp.Count > 1)
             {
-                leftPoints[i] = Evaluate(i == 0 ? 0 : t);
-                rightPoints[i] = Evaluate(t);
+                var newTemp = new List<Point>();
+                for (int i = 0; i < temp.Count - 1; i++)
+                {
+                    float x = (1 - t) * temp[i].X + t * temp[i + 1].X;
+                    float y = (1 - t) * temp[i].Y + t * temp[i + 1].Y;
+                    newTemp.Add(new Point(x, y));
+                }
+
+                left.Add(newTemp[0]);
+                right.Insert(0, newTemp[^1]);
+                temp = newTemp;
             }
 
-            return (new BezierCurve(leftPoints), new BezierCurve(rightPoints));
+            return (new BezierCurve(left.ToArray()), new BezierCurve(right.ToArray()));
         }
 
-        public Point ClosestPoint(Point target)
+        public Point ClosestPoint(Point target, int steps = 10000) // Aumentar pasos para más precisión
         {
-            Point closest = Evaluate(0);
-            float minDistance = Distance(closest, target);
+            Point closestPoint = Evaluate(0);
+            float minDistance = Distance(closestPoint, target);
 
-            for (int i = 1; i <= 100; i++)
+            for (int i = 1; i <= steps; i++)
             {
-                float t = (float)i / 100;
-                Point pointOnCurve = Evaluate(t);
-                float distance = Distance(pointOnCurve, target);
+                float t = i / (float)steps;
+                Point currentPoint = Evaluate(t);
+                float distance = Distance(currentPoint, target);
 
                 if (distance < minDistance)
                 {
                     minDistance = distance;
-                    closest = pointOnCurve;
+                    closestPoint = currentPoint;
                 }
             }
 
-            return closest;
+            return closestPoint;
         }
 
         public float DistanceTo(Point target)
         {
-            Point closest = ClosestPoint(target);
-            return Distance(closest, target);
+            Point closestPoint = ClosestPoint(target);
+            return Distance(closestPoint, target);
         }
     }
 }
