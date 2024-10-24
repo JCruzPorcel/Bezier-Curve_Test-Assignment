@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35219.272
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BezierCurve", "BezierCurve\BezierCurve.csproj", "{7F1C5599-C7A5-473A-889A-968E00EE0362}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BezierTests", "BezierTests\BezierTests.csproj", "{A1F61F75-AD3A-43BB-B1F2-C3E6FF5FCA07}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7F1C5599-C7A5-473A-889A-968E00EE0362}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F1C5599-C7A5-473A-889A-968E00EE0362}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F1C5599-C7A5-473A-889A-968E00EE0362}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F1C5599-C7A5-473A-889A-968E00EE0362}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1F61F75-AD3A-43BB-B1F2-C3E6FF5FCA07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1F61F75-AD3A-43BB-B1F2-C3E6FF5FCA07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1F61F75-AD3A-43BB-B1F2-C3E6FF5FCA07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1F61F75-AD3A-43BB-B1F2-C3E6FF5FCA07}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7263DCA0-7998-4347-B93E-4DDC7EA12028}
+	EndGlobalSection
+EndGlobal
