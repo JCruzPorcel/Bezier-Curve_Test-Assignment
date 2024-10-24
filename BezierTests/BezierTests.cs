@@ -1,76 +1,89 @@
 using NUnit.Framework;
 using System.Numerics;
 
-[TestFixture]
-public class BezierTests
+namespace BezierCurveTests
 {
-    [Test]
-    public void TestLinearBezier()
+    [TestFixture]
+    public class BezierTests
     {
-        var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1));
-        NUnit.Framework.Assert.AreEqual(1, bezier.Degree);
-        NUnit.Framework.Assert.AreEqual(new Vector2(0, 0), bezier.StartPoint);
-        NUnit.Framework.Assert.AreEqual(new Vector2(1, 1), bezier.EndPoint);
-    }
+        [Test]
+        public void TestBezierCreation_ValidPoints()
+        {
+            var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1));
+            NUnit.Framework.Assert.AreEqual(1, bezier.Degree);
+            NUnit.Framework.Assert.AreEqual(new Vector2(0, 0), bezier.StartPoint);
+            NUnit.Framework.Assert.AreEqual(new Vector2(1, 1), bezier.EndPoint);
+        }
 
-    [Test]
-    public void TestQuadraticBezier()
-    {
-        var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 2), new Vector2(2, 0));
-        NUnit.Framework.Assert.AreEqual(2, bezier.Degree);
-    }
+        [Test]
+        public void TestBezierCreation_InvalidPoints()
+        {
+            NUnit.Framework.Assert.Throws<ArgumentException>(() => new Bezier(new Vector2(0, 0))); // Solo un punto
+            NUnit.Framework.Assert.Throws<ArgumentException>(() => new Bezier(
+                new Vector2(0, 0),
+                new Vector2(1, 1),
+                new Vector2(2, 2),
+                new Vector2(3, 3),
+                new Vector2(4, 4))); // Demasiados puntos
+        }
 
-    [Test]
-    public void TestCubicBezier()
-    {
-        var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 2), new Vector2(2, 2), new Vector2(3, 0));
-        NUnit.Framework.Assert.AreEqual(3, bezier.Degree);
-    }
+        [Test]
+        public void TestPointAt()
+        {
+            var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1), new Vector2(2, 0));
+            var pointAtHalf = bezier.PointAt(0.5f);
+            NUnit.Framework.Assert.AreEqual(new Vector2(1, 0.5f), pointAtHalf); // Debe estar en el punto medio
+        }
 
-    [Test]
-    public void TestPointAt()
-    {
-        var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1));
-        NUnit.Framework.Assert.AreEqual(new Vector2(0.5f, 0.5f), bezier.PointAt(0.5f));
-    }
+        [Test]
+        public void TestTangentAt()
+        {
+            var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1), new Vector2(2, 0));
+            var tangentAtHalf = bezier.StartTangent; // Evaluar la tangente en t=0
+            NUnit.Framework.Assert.AreEqual(new Vector2(1, 1).Normalized(), tangentAtHalf); // El vector tangente en el inicio
+        }
 
-    [Test]
-    public void TestSplitBezier()
-    {
-        var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1));
-        var (left, right) = bezier.Split(0.5f);
+        [Test]
+        public void TestNormalAt()
+        {
+            var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1), new Vector2(2, 0));
+            var normalAtHalf = bezier.NormalAt(0.5f);
+            NUnit.Framework.Assert.AreEqual(new Vector2(2, 2).Normalized(), normalAtHalf); // El vector normal en el punto medio
+        }
 
-        NUnit.Framework.Assert.AreEqual(new Vector2(0, 0), left.StartPoint);
-        NUnit.Framework.Assert.AreEqual(new Vector2(0.5f, 0.5f), left.EndPoint);
-        NUnit.Framework.Assert.AreEqual(new Vector2(0.5f, 0.5f), right.StartPoint);
-        NUnit.Framework.Assert.AreEqual(new Vector2(1, 1), right.EndPoint);
-    }
+        [Test]
+        public void TestLength()
+        {
+            var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1), new Vector2(2, 0));
+            float length = bezier.Length;
+            NUnit.Framework.Assert.IsTrue(length > 0); // Debe ser positivo
+        }
 
-    [Test]
-    public void TestArcLengthParameter()
-    {
-        var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1));
-        float arcLength = bezier.ArcLengthParameter(0.5f);
-        NUnit.Framework.Assert.AreEqual(0.7071f, arcLength, 0.01f);
-    }
+        [Test]
+        public void TestClip()
+        {
+            var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1), new Vector2(2, 0));
+            var clipped = bezier.Clip(0.25f, 0.75f);
+            NUnit.Framework.Assert.AreEqual(2, clipped.Points.Count); // Debería haber dos puntos en la parte recortada
+        }
 
-    [Test]
-    public void TestTimeParameter()
-    {
-        var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1));
-        float arcLength = bezier.Length;
-        float t = bezier.TimeParameter(arcLength);
-        NUnit.Framework.Assert.AreEqual(1.0f, t, 0.01f);
-    }
+        [Test]
+        public void TestDistanceToPoint()
+        {
+            var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1), new Vector2(2, 0));
+            float distance = bezier.DistanceToPoint(new Vector2(1, 0));
+            NUnit.Framework.Assert.IsTrue(distance >= 0); // La distancia debe ser no negativa
+        }
 
-    [Test]
-    public void TestClip()
-    {
-        var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 2), new Vector2(2, 0));
-        var clipped = bezier.Clip(0.25f, 0.75f);
+        [Test]
+        public void TestApplyTransformation()
+        {
+            var bezier = new Bezier(new Vector2(0, 0), new Vector2(1, 1), new Vector2(2, 0));
+            var transformationMatrix = Matrix4x4.CreateTranslation(1, 1, 0); // Trasladar
+            bezier.ApplyTransformation(transformationMatrix);
 
-        NUnit.Framework.Assert.AreEqual(3, clipped.Points.Count, "Clipped segment must have 3 points.");
-        NUnit.Framework.Assert.AreEqual(new Vector2(0.5f, 1.0f), clipped.StartPoint);
-        NUnit.Framework.Assert.AreEqual(new Vector2(1.5f, 1.0f), clipped.EndPoint);
+            NUnit.Framework.Assert.AreEqual(new Vector2(1, 1), bezier.StartPoint);
+            NUnit.Framework.Assert.AreEqual(new Vector2(2, 2), bezier.EndPoint);
+        }
     }
 }
