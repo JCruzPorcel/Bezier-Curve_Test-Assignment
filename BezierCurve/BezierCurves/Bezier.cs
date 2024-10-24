@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
+﻿using System.Numerics;
 
 public static class Vector2Extensions
 {
@@ -28,10 +25,10 @@ public class Bezier
     public int Degree => Points.Count - 1;
     public Vector2 StartPoint => Points.First();
     public Vector2 EndPoint => Points.Last();
-    public float Length => EstimateLength(200);
+    public List<Vector2> Knots => Points.Skip(1).Take(Points.Count - 2).ToList();
     public Vector2 StartTangent => GetTangentAt(0);
     public Vector2 EndTangent => GetTangentAt(1);
-    public List<Vector2> Knots => Points.Skip(1).Take(Points.Count - 2).ToList();
+    public float Length => EstimateLength(200);
     public (Vector2 Min, Vector2 Max) BoundingBox => GetAxisAlignedBoundingBox();
     public List<Vector2> ApproximatingPolygon => GetApproximatingPolygon(100);
 
@@ -54,6 +51,11 @@ public class Bezier
 
     public float ArcLengthParameter(float t) => EstimateArcLengthParameter(t, 100);
     public float TimeParameter(float arcLength) => FindTimeByArcLength(arcLength, 100);
+
+    // New Methods
+    public Vector2 PointAtArcLength(float arcLength) => PointAt(TimeParameter(arcLength));
+    public Vector2 TangentAtArcLength(float arcLength) => GetTangentAt(TimeParameter(arcLength));
+    public Vector2 NormalAtArcLength(float arcLength) => NormalAt(TimeParameter(arcLength));
 
     // Private Methods
     private Vector2 DeCasteljau(List<Vector2> points, float t)
@@ -170,7 +172,6 @@ public class Bezier
         float maxX = float.MinValue;
         float maxY = float.MinValue;
 
-        // Agregar los puntos de control
         foreach (var point in Points)
         {
             minX = MathF.Min(minX, point.X);
@@ -179,8 +180,7 @@ public class Bezier
             maxY = MathF.Max(maxY, point.Y);
         }
 
-        // Agregar puntos aproximados
-        for (int i = 0; i <= 100; i++) // Evaluar 100 puntos en la curva
+        for (int i = 0; i <= 100; i++)
         {
             Vector2 currentPoint = PointAt(i / 100f);
             minX = MathF.Min(minX, currentPoint.X);
