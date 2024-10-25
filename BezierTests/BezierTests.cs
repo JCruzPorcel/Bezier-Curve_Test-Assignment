@@ -84,7 +84,7 @@ namespace BezierCurveTests
             var bezier = new Bezier(
                 new Vector2(-15, -15),
                 new Vector2(-5, 20),
-                new Vector2(15, -15)
+                new Vector2(15, -15) 
             );
 
             var (min, max) = bezier.BoundingBox;
@@ -170,7 +170,7 @@ namespace BezierCurveTests
         {
             var bezier = new Bezier(
                 new Vector2(0, 0),
-                new Vector2(5, 10),
+                new Vector2(5, 10), 
                 new Vector2(10, 0)
             );
 
